@@ -6,12 +6,51 @@ import { FormField, Loader } from "../components";
 const CreatePost = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", prompt: "", photo: "" });
-  const [generatingImg, setGeneratingImg] = useState(true);
+  const [generatingImg, setGeneratingImg] = useState(false);
   const [loading, setLoading] = useState(false);
-  const handleSubmit = () => {};
-  const handleChange = () => {};
-  const handleSurpriseMe = () => {};
-  const generateImage = () => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (form.prompt && form.photo && form.name) {
+      setLoading(true);
+      try {
+        const response = await fetch("http://localhost:4000/api/v1/posts/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        console.log(await response);
+        navigate("/");
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleSurpriseMe = () => {
+    const randomPrompt = getRandomPrompt(form.prompt);
+    setForm({ ...form, prompt: randomPrompt });
+  };
+  const generateImage = async () => {
+    if (form.prompt) {
+      try {
+        setGeneratingImg(true);
+        const response = await fetch("http://localhost:4000/api/v1/openai/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: form.prompt }),
+        });
+        const data = await response.json();
+        setForm({ ...form, photo: `data:image/jpeg;base64,${data.photo}` });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setGeneratingImg(false);
+      }
+    }
+  };
   return (
     <section className="max-w-7xl mx-auto">
       <div>
